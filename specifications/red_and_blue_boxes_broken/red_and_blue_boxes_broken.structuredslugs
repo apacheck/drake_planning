@@ -1,0 +1,81 @@
+[INPUT]
+red_in_a
+red_in_b
+red_in_c
+
+blue_in_a
+blue_in_b
+blue_in_c
+
+red_on_blue
+blue_on_red
+
+[OUTPUT]
+move_red_a_to_b
+move_red_b_to_c
+move_red_c_to_b
+
+move_blue_c_to_b
+move_blue_b_to_a
+
+[ENV_INIT]
+# Start with red in A and blue in c
+
+red_in_a
+blue_in_c
+!red_on_blue
+!blue_on_red
+
+[SYS_INIT]
+# Force start with no actions, for simplicity.
+
+!move_red_a_to_b
+!move_red_b_to_c
+!move_red_c_to_b
+
+!move_blue_c_to_b
+!move_blue_b_to_a
+
+
+[SYS_TRANS]
+# Enforce initial state of actions.
+# Actions can only be taken if the block they modify is on top
+!(red_in_a') -> !(move_red_a_to_b')
+!(red_in_b') -> !(move_red_b_to_c')
+!(red_in_c') -> !(move_red_c_to_b')
+
+!(blue_in_c') -> !(move_blue_c_to_b')
+!(blue_in_b') -> !(move_blue_b_to_a')
+
+red_on_blue' -> !(move_blue_c_to_b' | move_blue_b_to_a')
+blue_on_red' -> !(move_red_a_to_b' | move_red_b_to_c' | move_red_c_to_b')
+
+(move_red_a_to_b' & !move_red_b_to_c' & !move_red_c_to_b' & !move_blue_b_to_a' & !move_blue_c_to_b') | (!move_red_a_to_b' & move_red_b_to_c' & !move_red_c_to_b' & !move_blue_b_to_a' & !move_blue_c_to_b') | (!move_red_a_to_b' & !move_red_b_to_c' & move_red_c_to_b' & !move_blue_b_to_a' & !move_blue_c_to_b') | (!move_red_a_to_b' & !move_red_b_to_c' & !move_red_c_to_b' & move_blue_b_to_a' & !move_blue_c_to_b') | (!move_red_a_to_b' & !move_red_b_to_c' & !move_red_c_to_b' & !move_blue_b_to_a' & move_blue_c_to_b')
+
+[ENV_TRANS]
+# Consequences of actions.
+# Putting boxes away takes them off of whatever they're on,
+
+move_red_a_to_b & blue_in_b -> red_in_b' & !red_in_a' !red_in_c' & red_on_blue'
+move_red_a_to_b & !blue_in_b -> red_in_b' & !red_in_a' & !red_in_c' & !red_on_blue'
+
+move_red_b_to_c & blue_in_c -> red_in_c' & !red_in_b' & !red_in_a' & red_on_blue'
+move_red_b_to_c & !blue_in_c -> red_in_c' & !red_in_b' & !red_in_a' & !red_on_blue'
+
+move_red_c_to_b & blue_in_b -> red_in_b' & !red_in_c' & !red_in_a' & red_on_blue'
+move_red_c_to_b & !blue_in_b -> red_in_b' & !red_in_c' & !red_in_a' & !red_on_blue'
+
+move_blue_c_to_b & red_in_b -> blue_in_b' & !blue_in_c' & !blue_in_a' & blue_on_red'
+move_blue_c_to_b & !red_in_b -> blue_in_b' & !blue_in_c' & !blue_in_a' & !blue_on_red'
+
+move_blue_b_to_a & red_in_a -> blue_in_a' & !blue_in_b' & !blue_in_c' & blue_on_red'
+move_blue_b_to_a & !red_in_a -> blue_in_a' & !blue_in_b' & !blue_in_c' !blue_on_red'
+
+(move_red_a_to_b | move_red_b_to_c | move_red_c_to_b) -> !blue_on_red' & (blue_in_a <-> blue_in_a') & (blue_in_b <-> blue_in_b') & (blue_in_c <-> blue_in_c')
+(move_blue_b_to_a | move_blue_c_to_b) -> !red_on_blue' & (red_in_a <-> red_in_a') & (red_in_b <-> red_in_b') & (red_in_c <-> red_in_c')
+
+!(move_red_a_to_b & move_red_b_to_c & move_red_c_to_b & move_blue_b_to_a & move_blue_c_to_b) -> (blue_in_a <-> blue_in_a') & (blue_in_b <-> blue_in_b') & (blue_in_c <-> blue_in_c') & (red_in_a <-> red_in_a') & (red_in_b <-> red_in_b') & (red_in_c <-> red_in_c') & (red_on_blue <-> red_on_blue') & (blue_on_red <-> blue_on_red')
+
+[SYS_LIVENESS]
+red_in_c & blue_in_a
+red_in_a & blue_in_c

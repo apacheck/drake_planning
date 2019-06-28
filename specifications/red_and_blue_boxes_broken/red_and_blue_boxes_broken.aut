@@ -1,0 +1,64 @@
+State 0 with rank 0 -> <red_in_a:1, red_in_b:0, red_in_c:0, blue_in_a:0, blue_in_b:0, blue_in_c:1, red_on_blue:0, blue_on_red:0, move_red_a_to_b:0, move_red_b_to_c:0, move_red_c_to_b:0, move_blue_c_to_b:0, move_blue_b_to_a:0>
+	With successors : 16
+State 1 with rank 0 -> <red_in_a:1, red_in_b:0, red_in_c:0, blue_in_a:0, blue_in_b:1, blue_in_c:1, red_on_blue:0, blue_on_red:0, move_red_a_to_b:0, move_red_b_to_c:0, move_red_c_to_b:0, move_blue_c_to_b:0, move_blue_b_to_a:0>
+	With successors : 17
+State 2 with rank 0 -> <red_in_a:1, red_in_b:0, red_in_c:0, blue_in_a:1, blue_in_b:0, blue_in_c:1, red_on_blue:0, blue_on_red:0, move_red_a_to_b:0, move_red_b_to_c:0, move_red_c_to_b:0, move_blue_c_to_b:0, move_blue_b_to_a:0>
+	With successors : 18
+State 3 with rank 0 -> <red_in_a:1, red_in_b:0, red_in_c:0, blue_in_a:1, blue_in_b:1, blue_in_c:1, red_on_blue:0, blue_on_red:0, move_red_a_to_b:0, move_red_b_to_c:0, move_red_c_to_b:0, move_blue_c_to_b:0, move_blue_b_to_a:0>
+	With successors : 19
+State 4 with rank 0 -> <red_in_a:1, red_in_b:0, red_in_c:1, blue_in_a:0, blue_in_b:0, blue_in_c:1, red_on_blue:0, blue_on_red:0, move_red_a_to_b:0, move_red_b_to_c:0, move_red_c_to_b:0, move_blue_c_to_b:0, move_blue_b_to_a:0>
+	With successors : 20
+State 5 with rank 0 -> <red_in_a:1, red_in_b:0, red_in_c:1, blue_in_a:0, blue_in_b:1, blue_in_c:1, red_on_blue:0, blue_on_red:0, move_red_a_to_b:0, move_red_b_to_c:0, move_red_c_to_b:0, move_blue_c_to_b:0, move_blue_b_to_a:0>
+	With successors : 21
+State 6 with rank 0 -> <red_in_a:1, red_in_b:0, red_in_c:1, blue_in_a:1, blue_in_b:0, blue_in_c:1, red_on_blue:0, blue_on_red:0, move_red_a_to_b:0, move_red_b_to_c:0, move_red_c_to_b:0, move_blue_c_to_b:0, move_blue_b_to_a:0>
+	With successors : 22
+State 7 with rank 0 -> <red_in_a:1, red_in_b:0, red_in_c:1, blue_in_a:1, blue_in_b:1, blue_in_c:1, red_on_blue:0, blue_on_red:0, move_red_a_to_b:0, move_red_b_to_c:0, move_red_c_to_b:0, move_blue_c_to_b:0, move_blue_b_to_a:0>
+	With successors : 23
+State 8 with rank 0 -> <red_in_a:1, red_in_b:1, red_in_c:0, blue_in_a:0, blue_in_b:0, blue_in_c:1, red_on_blue:0, blue_on_red:0, move_red_a_to_b:0, move_red_b_to_c:0, move_red_c_to_b:0, move_blue_c_to_b:0, move_blue_b_to_a:0>
+	With successors : 24
+State 9 with rank 0 -> <red_in_a:1, red_in_b:1, red_in_c:0, blue_in_a:0, blue_in_b:1, blue_in_c:1, red_on_blue:0, blue_on_red:0, move_red_a_to_b:0, move_red_b_to_c:0, move_red_c_to_b:0, move_blue_c_to_b:0, move_blue_b_to_a:0>
+	With successors : 25
+State 10 with rank 0 -> <red_in_a:1, red_in_b:1, red_in_c:0, blue_in_a:1, blue_in_b:0, blue_in_c:1, red_on_blue:0, blue_on_red:0, move_red_a_to_b:0, move_red_b_to_c:0, move_red_c_to_b:0, move_blue_c_to_b:0, move_blue_b_to_a:0>
+	With successors : 26
+State 11 with rank 0 -> <red_in_a:1, red_in_b:1, red_in_c:0, blue_in_a:1, blue_in_b:1, blue_in_c:1, red_on_blue:0, blue_on_red:0, move_red_a_to_b:0, move_red_b_to_c:0, move_red_c_to_b:0, move_blue_c_to_b:0, move_blue_b_to_a:0>
+	With successors : 27
+State 12 with rank 0 -> <red_in_a:1, red_in_b:1, red_in_c:1, blue_in_a:0, blue_in_b:0, blue_in_c:1, red_on_blue:0, blue_on_red:0, move_red_a_to_b:0, move_red_b_to_c:0, move_red_c_to_b:0, move_blue_c_to_b:0, move_blue_b_to_a:0>
+	With successors : 28
+State 13 with rank 0 -> <red_in_a:1, red_in_b:1, red_in_c:1, blue_in_a:0, blue_in_b:1, blue_in_c:1, red_on_blue:0, blue_on_red:0, move_red_a_to_b:0, move_red_b_to_c:0, move_red_c_to_b:0, move_blue_c_to_b:0, move_blue_b_to_a:0>
+	With successors : 29
+State 14 with rank 0 -> <red_in_a:1, red_in_b:1, red_in_c:1, blue_in_a:1, blue_in_b:0, blue_in_c:1, red_on_blue:0, blue_on_red:0, move_red_a_to_b:0, move_red_b_to_c:0, move_red_c_to_b:0, move_blue_c_to_b:0, move_blue_b_to_a:0>
+	With successors : 30
+State 15 with rank 0 -> <red_in_a:1, red_in_b:1, red_in_c:1, blue_in_a:1, blue_in_b:1, blue_in_c:1, red_on_blue:0, blue_on_red:0, move_red_a_to_b:0, move_red_b_to_c:0, move_red_c_to_b:0, move_blue_c_to_b:0, move_blue_b_to_a:0>
+	With successors : 31
+State 16 with rank 0 -> <red_in_a:1, red_in_b:0, red_in_c:0, blue_in_a:0, blue_in_b:0, blue_in_c:1, red_on_blue:0, blue_on_red:0, move_red_a_to_b:0, move_red_b_to_c:0, move_red_c_to_b:0, move_blue_c_to_b:1, move_blue_b_to_a:0>
+	With successors : 
+State 17 with rank 0 -> <red_in_a:1, red_in_b:0, red_in_c:0, blue_in_a:0, blue_in_b:1, blue_in_c:1, red_on_blue:0, blue_on_red:0, move_red_a_to_b:0, move_red_b_to_c:0, move_red_c_to_b:0, move_blue_c_to_b:0, move_blue_b_to_a:1>
+	With successors : 
+State 18 with rank 0 -> <red_in_a:1, red_in_b:0, red_in_c:0, blue_in_a:1, blue_in_b:0, blue_in_c:1, red_on_blue:0, blue_on_red:0, move_red_a_to_b:0, move_red_b_to_c:0, move_red_c_to_b:0, move_blue_c_to_b:1, move_blue_b_to_a:0>
+	With successors : 
+State 19 with rank 0 -> <red_in_a:1, red_in_b:0, red_in_c:0, blue_in_a:1, blue_in_b:1, blue_in_c:1, red_on_blue:0, blue_on_red:0, move_red_a_to_b:0, move_red_b_to_c:0, move_red_c_to_b:0, move_blue_c_to_b:0, move_blue_b_to_a:1>
+	With successors : 
+State 20 with rank 0 -> <red_in_a:1, red_in_b:0, red_in_c:1, blue_in_a:0, blue_in_b:0, blue_in_c:1, red_on_blue:0, blue_on_red:0, move_red_a_to_b:0, move_red_b_to_c:0, move_red_c_to_b:0, move_blue_c_to_b:1, move_blue_b_to_a:0>
+	With successors : 
+State 21 with rank 0 -> <red_in_a:1, red_in_b:0, red_in_c:1, blue_in_a:0, blue_in_b:1, blue_in_c:1, red_on_blue:0, blue_on_red:0, move_red_a_to_b:0, move_red_b_to_c:0, move_red_c_to_b:0, move_blue_c_to_b:0, move_blue_b_to_a:1>
+	With successors : 
+State 22 with rank 0 -> <red_in_a:1, red_in_b:0, red_in_c:1, blue_in_a:1, blue_in_b:0, blue_in_c:1, red_on_blue:0, blue_on_red:0, move_red_a_to_b:0, move_red_b_to_c:0, move_red_c_to_b:0, move_blue_c_to_b:1, move_blue_b_to_a:0>
+	With successors : 
+State 23 with rank 0 -> <red_in_a:1, red_in_b:0, red_in_c:1, blue_in_a:1, blue_in_b:1, blue_in_c:1, red_on_blue:0, blue_on_red:0, move_red_a_to_b:0, move_red_b_to_c:0, move_red_c_to_b:0, move_blue_c_to_b:0, move_blue_b_to_a:1>
+	With successors : 
+State 24 with rank 0 -> <red_in_a:1, red_in_b:1, red_in_c:0, blue_in_a:0, blue_in_b:0, blue_in_c:1, red_on_blue:0, blue_on_red:0, move_red_a_to_b:0, move_red_b_to_c:0, move_red_c_to_b:0, move_blue_c_to_b:1, move_blue_b_to_a:0>
+	With successors : 
+State 25 with rank 0 -> <red_in_a:1, red_in_b:1, red_in_c:0, blue_in_a:0, blue_in_b:1, blue_in_c:1, red_on_blue:0, blue_on_red:0, move_red_a_to_b:0, move_red_b_to_c:0, move_red_c_to_b:0, move_blue_c_to_b:0, move_blue_b_to_a:1>
+	With successors : 
+State 26 with rank 0 -> <red_in_a:1, red_in_b:1, red_in_c:0, blue_in_a:1, blue_in_b:0, blue_in_c:1, red_on_blue:0, blue_on_red:0, move_red_a_to_b:0, move_red_b_to_c:0, move_red_c_to_b:0, move_blue_c_to_b:1, move_blue_b_to_a:0>
+	With successors : 
+State 27 with rank 0 -> <red_in_a:1, red_in_b:1, red_in_c:0, blue_in_a:1, blue_in_b:1, blue_in_c:1, red_on_blue:0, blue_on_red:0, move_red_a_to_b:0, move_red_b_to_c:0, move_red_c_to_b:0, move_blue_c_to_b:0, move_blue_b_to_a:1>
+	With successors : 
+State 28 with rank 0 -> <red_in_a:1, red_in_b:1, red_in_c:1, blue_in_a:0, blue_in_b:0, blue_in_c:1, red_on_blue:0, blue_on_red:0, move_red_a_to_b:0, move_red_b_to_c:0, move_red_c_to_b:0, move_blue_c_to_b:1, move_blue_b_to_a:0>
+	With successors : 
+State 29 with rank 0 -> <red_in_a:1, red_in_b:1, red_in_c:1, blue_in_a:0, blue_in_b:1, blue_in_c:1, red_on_blue:0, blue_on_red:0, move_red_a_to_b:0, move_red_b_to_c:0, move_red_c_to_b:0, move_blue_c_to_b:0, move_blue_b_to_a:1>
+	With successors : 
+State 30 with rank 0 -> <red_in_a:1, red_in_b:1, red_in_c:1, blue_in_a:1, blue_in_b:0, blue_in_c:1, red_on_blue:0, blue_on_red:0, move_red_a_to_b:0, move_red_b_to_c:0, move_red_c_to_b:0, move_blue_c_to_b:1, move_blue_b_to_a:0>
+	With successors : 
+State 31 with rank 0 -> <red_in_a:1, red_in_b:1, red_in_c:1, blue_in_a:1, blue_in_b:1, blue_in_c:1, red_on_blue:0, blue_on_red:0, move_red_a_to_b:0, move_red_b_to_c:0, move_red_c_to_b:0, move_blue_c_to_b:0, move_blue_b_to_a:1>
+	With successors : 

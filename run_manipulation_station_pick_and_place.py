@@ -353,9 +353,10 @@ def add_goal_region_visual_geometry(mbp, goal_position, goal_delta):
     mbp.RegisterVisualGeometry(body, RigidTransform(), shape, "goal_vis", [0.4, 0.9, 0.4, 0.35])
 
 def main():
-    goal_position = np.array([0.5, 0., 0.025])
-    blue_box_clean_position = [0.4, 0., 0.05]
-    red_box_clean_position = [0.6, 0., 0.05]
+    # goal_position = np.array([0.5, 0., 0.025])
+    blue_box_position = [0.4, 0., 0.05]
+    red_box_unstack_position = [0.6, 0., 0.05]
+    red_box_stack_position = [0.4, 0, 0.2]
     goal_delta = 0.05
 
     parser = argparse.ArgumentParser(description=__doc__)
@@ -378,11 +379,11 @@ def main():
     station = builder.AddSystem(ManipulationStation(0.001))
     mbp = station.get_multibody_plant()
     station.SetupManipulationClassStation()
-    add_goal_region_visual_geometry(mbp, goal_position, goal_delta)
+    # add_goal_region_visual_geometry(mbp, goal_position, goal_delta)
     add_box_at_location(mbp, name="blue_box", color=[0.25, 0.25, 1., 1.],
-                        pose=RigidTransform(p=[0.4, 0.0, 0.025]))
+                        pose=RigidTransform(p=blue_box_position))
     add_box_at_location(mbp, name="red_box", color=[1., 0.25, 0.25, 1.],
-                        pose=RigidTransform(p=[0.6, 0.0, 0.025]))
+                        pose=RigidTransform(p=red_box_unstack_position))
     station.Finalize()
     iiwa_q0 = np.array([0.0, 0.6, 0.0, -1.75, 0., 1., np.pi / 2.])
 
@@ -425,23 +426,25 @@ def main():
 
     if not args.teleop:
         symbol_list = [
-            SymbolL2Close("blue_box_in_goal", "blue_box", goal_position, goal_delta),
-            SymbolL2Close("red_box_in_goal", "red_box", goal_position, goal_delta),
-            SymbolRelativePositionL2("blue_box_on_red_box", "blue_box", "red_box", l2_thresh=0.01, offset=np.array([0., 0., 0.05])),
-            SymbolRelativePositionL2("red_box_on_blue_box", "red_box", "blue_box", l2_thresh=0.01, offset=np.array([0., 0., 0.05])),
+            # SymbolL2Close("blue_box_in_goal", "blue_box", goal_position, goal_delta),
+            # SymbolL2Close("red_box_in_goal", "red_box", goal_position, goal_delta),
+            # SymbolRelativePositionL2("blue_box_on_red_box", "blue_box", "red_box", l2_thresh=0.01, offset=np.array([0., 0., 0.05])),
+            SymbolRelativePositionL2("red_box_on_blue_box", "red_box", "blue_box", l2_thresh=0.01, offset=np.array([0., 0., 0.05]))
         ]
         primitive_list = [
-            MoveBoxPrimitive("put_blue_box_in_goal", mbp, "blue_box", goal_position),
-            MoveBoxPrimitive("put_red_box_in_goal", mbp, "red_box", goal_position),
-            MoveBoxPrimitive("put_blue_box_away", mbp, "blue_box", blue_box_clean_position),
-            MoveBoxPrimitive("put_red_box_away", mbp, "red_box", red_box_clean_position),
-            MoveBoxPrimitive("put_red_box_on_blue_box", mbp, "red_box", np.array([0., 0., 0.05]), "blue_box"),
-            MoveBoxPrimitive("put_blue_box_on_red_box", mbp, "blue_box", np.array([0., 0., 0.05]), "red_box"),
+            # MoveBoxPrimitive("put_blue_box_in_goal", mbp, "blue_box", goal_position),
+            # MoveBoxPrimitive("put_red_box_in_goal", mbp, "red_box", goal_position),
+            # MoveBoxPrimitive("put_blue_box_away", mbp, "blue_box", blue_box_clean_position),
+            # MoveBoxPrimitive("put_red_box_away", mbp, "red_box", red_box_clean_position),
+            # MoveBoxPrimitive("put_red_box_on_blue_box", mbp, "red_box", np.array([0., 0., 0.05]), "blue_box"),
+            # MoveBoxPrimitive("put_blue_box_on_red_box", mbp, "blue_box", np.array([0., 0., 0.05]), "red_box"),
+            MoveBoxPrimitive("stack_red", mbp, "red_box", red_box_stack_position),
+            MoveBoxPrimitive("unstack_red", mbp, "red_box", red_box_unstack_position)
         ]
         task_execution_system = builder.AddSystem(
             TaskExectionSystem(
                 mbp, symbol_list=symbol_list, primitive_list=primitive_list,
-                dfa_json_file="red_and_blue_boxes_stacking.json"))
+                dfa_json_file="specifications/red_stacking/red_stacking.json"))
 
         builder.Connect(
             station.GetOutputPort("plant_continuous_state"),

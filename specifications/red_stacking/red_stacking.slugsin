@@ -1,0 +1,40 @@
+[INPUT]
+red_box_on_blue_box
+
+
+[OUTPUT]
+stack_red
+unstack_red
+
+
+[ENV_TRANS]
+| ! stack_red | red_box_on_blue_box' ! red_box_on_blue_box'
+| ! unstack_red ! red_box_on_blue_box'
+
+| ! & ! stack_red ! unstack_red | & ! red_box_on_blue_box ! red_box_on_blue_box' & red_box_on_blue_box red_box_on_blue_box'
+
+
+[ENV_INIT]
+! red_box_on_blue_box
+
+
+[SYS_TRANS]
+# Red must be on blue to unstack red
+# red must not be on blue to stack red
+| ! ! red_box_on_blue_box' ! unstack_red'
+| ! ! ! red_box_on_blue_box' ! stack_red'
+
+! & stack_red' unstack_red'
+
+
+
+[SYS_INIT]
+! stack_red
+! unstack_red
+
+
+[SYS_LIVENESS]
+#red_box_on_blue_box
+#!red_box_on_blue_box
+stack_red
+

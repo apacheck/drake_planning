@@ -1,0 +1,8 @@
+State 0 with rank 0 -> <red_box_on_blue_box:0, stack_red:0, unstack_red:0>
+	With successors : 1
+State 1 with rank 0 -> <red_box_on_blue_box:0, stack_red:1, unstack_red:0>
+	With successors : 0, 2
+State 2 with rank 0 -> <red_box_on_blue_box:1, stack_red:0, unstack_red:0>
+	With successors : 3
+State 3 with rank 0 -> <red_box_on_blue_box:1, stack_red:0, unstack_red:1>
+	With successors : 1

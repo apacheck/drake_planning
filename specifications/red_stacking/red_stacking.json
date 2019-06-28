@@ -1,0 +1,31 @@
+{"version": 0,
+ "slugs": "0.0.1",
+
+ "variables": ["red_box_on_blue_box", "stack_red", "unstack_red"],
+
+ "nodes": {
+"0": {
+	"rank": 0,
+	"state": [0, 0, 0],
+	"trans": [1]
+},
+
+"1": {
+	"rank": 0,
+	"state": [0, 1, 0],
+	"trans": [0, 2]
+},
+
+"2": {
+	"rank": 0,
+	"state": [1, 0, 0],
+	"trans": [3]
+},
+
+"3": {
+	"rank": 0,
+	"state": [1, 0, 1],
+	"trans": [1]
+}
+
+}}
