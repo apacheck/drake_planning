@@ -358,6 +358,7 @@ def main():
     red_box_unstack_position = [0.6, 0., 0.025]
     red_box_stack_position = [0.5, 0, 0.2]
     red_box_stack_position_relative = np.array([0.02, 0, 0.20])
+    red_box_stack_position_relative_accurate = np.array([0.0, 0, 0.1])
     goal_delta = 0.05
 
     parser = argparse.ArgumentParser(description=__doc__)
@@ -430,7 +431,7 @@ def main():
             # SymbolL2Close("blue_box_in_goal", "blue_box", goal_position, goal_delta),
             # SymbolL2Close("red_box_in_goal", "red_box", goal_position, goal_delta),
             # SymbolRelativePositionL2("blue_box_on_red_box", "blue_box", "red_box", l2_thresh=0.01, offset=np.array([0., 0., 0.05])),
-            SymbolRelativePositionL2("red_box_on_blue_box", "red_box", "blue_box", l2_thresh=0.02, offset=np.array([0., 0., 0.05]))
+            SymbolRelativePositionL2("red_box_on_blue_box", "red_box", "blue_box", l2_thresh=0.03, offset=np.array([0., 0., 0.05]))
         ]
         primitive_list = [
             # MoveBoxPrimitive("put_blue_box_in_goal", mbp, "blue_box", goal_position),
@@ -441,12 +442,13 @@ def main():
             # MoveBoxPrimitive("put_blue_box_on_red_box", mbp, "blue_box", np.array([0., 0., 0.05]), "red_box"),
             # MoveBoxPrimitive("stack_red", mbp, "red_box", red_box_stack_position),
             MoveBoxPrimitive("stack_red", mbp, "red_box", red_box_stack_position_relative, "blue_box"),
-            MoveBoxPrimitive("unstack_red", mbp, "red_box", red_box_unstack_position)
+            MoveBoxPrimitive("unstack_red", mbp, "red_box", red_box_unstack_position),
+            MoveBoxPrimitive("extra_action",mbp,"red_box",red_box_stack_position_relative_accurate, "blue_box")
         ]
         task_execution_system = builder.AddSystem(
             TaskExectionSystem(
                 mbp, symbol_list=symbol_list, primitive_list=primitive_list,
-                dfa_json_file="specifications/red_stacking/red_stacking.json"))
+                dfa_json_file="specifications/red_stacking/red_stacking_add_action.json"))
 
         builder.Connect(
             station.GetOutputPort("plant_continuous_state"),

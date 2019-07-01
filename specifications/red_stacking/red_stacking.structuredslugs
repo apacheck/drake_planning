@@ -4,6 +4,7 @@ red_box_on_blue_box
 [OUTPUT]
 stack_red
 unstack_red
+#extra_action
 
 [ENV_INIT]
 !red_box_on_blue_box
@@ -11,11 +12,14 @@ unstack_red
 [SYS_INIT]
 !stack_red
 !unstack_red
+#!extra_action
 
 [ENV_TRANS]
 stack_red -> (red_box_on_blue_box' | !red_box_on_blue_box')
 unstack_red -> !red_box_on_blue_box'
 
+# No action -> nothing changes
+#(!stack_red & !unstack_red & !extra_action) -> (red_box_on_blue_box <-> red_box_on_blue_box')
 (!stack_red & !unstack_red) -> (red_box_on_blue_box <-> red_box_on_blue_box')
 
 [SYS_TRANS]
@@ -24,7 +28,9 @@ unstack_red -> !red_box_on_blue_box'
 !(red_box_on_blue_box') -> !(unstack_red')
 !(!red_box_on_blue_box') -> !(stack_red')
 
-!(stack_red' & unstack_red')
+# Mutual exclusion of actions
+#(!stack_red' & !unstack_red' & !extra_action') | (stack_red' & !unstack_red' & !extra_action') | (!stack_red' & unstack_red' & !extra_action') | (!stack_red' & !unstack_red' & extra_action')
+(!stack_red' & !unstack_red') | (stack_red' & !unstack_red') | (!stack_red' & unstack_red')
 
 
 [SYS_LIVENESS]
