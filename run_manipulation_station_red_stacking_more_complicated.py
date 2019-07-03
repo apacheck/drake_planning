@@ -286,8 +286,8 @@ def RegisterVisualAndCollisionGeometry(
     mbp.RegisterCollisionGeometry(body, pose, shape, name + "_col",
                                   friction)
 
-def add_box_at_location(mbp, name, color, pose, mass=0.25, inertia=UnitInertia(3E-3, 3E-3, 3E-3), side=0.05):
-    ''' Adds a {side}cm cube at the specified pose. Uses a planar floating base
+def add_box_at_location(mbp, name, color, pose, mass=0.25, inertia=UnitInertia(3E-3, 3E-3, 3E-3)):
+    ''' Adds a 5cm cube at the specified pose. Uses a planar floating base
     in the x-z plane. '''
     no_mass_no_inertia = SpatialInertia(
             mass=0., p_PScm_E=np.array([0., 0., 0.]),
@@ -295,7 +295,7 @@ def add_box_at_location(mbp, name, color, pose, mass=0.25, inertia=UnitInertia(3
     body_mass_and_inertia = SpatialInertia(
             mass=mass, p_PScm_E=np.array([0., 0., 0.]),
             G_SP_E=inertia)
-    shape = Box(side, side, side)
+    shape = Box(0.05, 0.05, 0.05)
     model_instance = mbp.AddModelInstance(name)
     body = mbp.AddRigidBody(name, model_instance, body_mass_and_inertia)
     RegisterVisualAndCollisionGeometry(
@@ -355,7 +355,8 @@ def add_goal_region_visual_geometry(mbp, goal_position, goal_delta):
 def main():
     # goal_position = np.array([0.5, 0., 0.025])
     blue_box_position = [0.5, 0., 0.025]
-    red_box_unstack_position = [0.6, 0., 0.025]
+    red_box_position_a = [0.4, 0., 0.025]
+    red_box_position_c = [0.6, 0, 0.025]
     red_box_stack_position = [0.5, 0, 0.2]
     red_box_stack_position_relative = np.array([0.02, 0, 0.20])
     red_box_stack_position_relative_accurate = np.array([0.0, 0, 0.1])
@@ -385,7 +386,7 @@ def main():
     add_box_at_location(mbp, name="blue_box", color=[0.25, 0.25, 1., 1.],
                         pose=RigidTransform(p=blue_box_position))
     add_box_at_location(mbp, name="red_box", color=[1., 0.25, 0.25, 1.],
-                        pose=RigidTransform(p=red_box_unstack_position), side=0.1)
+                        pose=RigidTransform(p=red_box_position_a))
     station.Finalize()
     iiwa_q0 = np.array([0.0, 0.6, 0.0, -1.75, 0., 1., np.pi / 2.])
 
@@ -431,7 +432,9 @@ def main():
             # SymbolL2Close("blue_box_in_goal", "blue_box", goal_position, goal_delta),
             # SymbolL2Close("red_box_in_goal", "red_box", goal_position, goal_delta),
             # SymbolRelativePositionL2("blue_box_on_red_box", "blue_box", "red_box", l2_thresh=0.01, offset=np.array([0., 0., 0.05])),
-            SymbolRelativePositionL2("red_box_on_blue_box", "red_box", "blue_box", l2_thresh=0.03, offset=np.array([0., 0., 0.05]))
+            SymbolRelativePositionL2("red_box_on_blue_box", "red_box", "blue_box", l2_thresh=0.03, offset=np.array([0., 0., 0.05])),
+            SymbolL2Close("red_box_position_a", "red_box", red_box_position_a, 0.03),
+            SymbolL2Close("red_box_position_c", "red_box", red_box_position_c, 0.03)
         ]
         primitive_list = [
             # MoveBoxPrimitive("put_blue_box_in_goal", mbp, "blue_box", goal_position),
@@ -441,9 +444,9 @@ def main():
             # MoveBoxPrimitive("put_red_box_on_blue_box", mbp, "red_box", np.array([0., 0., 0.05]), "blue_box"),
             # MoveBoxPrimitive("put_blue_box_on_red_box", mbp, "blue_box", np.array([0., 0., 0.05]), "red_box"),
             # MoveBoxPrimitive("stack_red", mbp, "red_box", red_box_stack_position),
-            MoveBoxPrimitive("stack_red", mbp, "red_box", red_box_stack_position_relative, "blue_box"),
-            MoveBoxPrimitive("unstack_red", mbp, "red_box", red_box_unstack_position),
-            MoveBoxPrimitive("extra_action",mbp,"red_box",red_box_stack_position_relative_accurate, "blue_box")
+            MoveBoxPrimitive("red_a_to_stack", mbp, "red_box", red_box_stack_position_relative, "blue_box"),
+            MoveBoxPrimitive("red_unstack_to_a", mbp, "red_box", red_box_position_a)
+            # MoveBoxPrimitive("extra_action", mbp, "red_box", red_box_stack_position_relative_accurate, "blue_box")
         ]
         task_execution_system = builder.AddSystem(
             TaskExectionSystem(

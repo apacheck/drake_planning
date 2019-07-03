@@ -68,6 +68,7 @@ class TaskExectionSystem(LeafSystem):
     def __init__(self, mbp, symbol_list, primitive_list, dfa_json_file, update_period=0.1):
         LeafSystem.__init__(self)
 
+        self.box_names = ["red_box","blue_box"]
         self.mbp = mbp
         # Our version of MBP context, which we'll modify
         # in the publish method.
@@ -155,13 +156,20 @@ class TaskExectionSystem(LeafSystem):
         self.mbp.SetPositionsAndVelocities(self.mbp_context, x)
         state_object = context.get_state().get_abstract_state().get_value(0).get_value()
 
+        # Check that the velocity of everything is 0
+        vel_thresh = 0.01
+        velocities = np.ones(3*len(self.box_names))
+        for ii, name in enumerate(self.box_names):
+            velocities[3*ii:3*(ii+1)] = self.mbp.EvalBodySpatialVelocityInWorld(self.mbp_context, self.mbp.GetBodyByName(name)).translational()
+        velocities_are_zero = np.all(np.abs(velocities) < vel_thresh)
+        # velocities_are_zero = True
         trajectory_is_done = (
             state_object.rpy_xyz_desired_traj is None or
             state_object.wsg_position_traj is None or 
             (t - state_object.start_time >= state_object.rpy_xyz_desired_traj.end_time() and
             t - state_object.start_time >= state_object.wsg_position_traj.end_time())
         )
-        if trajectory_is_done:
+        if (trajectory_is_done and velocities_are_zero):
             # Check each symbol against current mbp_context
             curr_state_vector = []
             for symbol in self.environment_symbols:
@@ -286,7 +294,7 @@ def RegisterVisualAndCollisionGeometry(
     mbp.RegisterCollisionGeometry(body, pose, shape, name + "_col",
                                   friction)
 
-def add_box_at_location(mbp, name, color, pose, mass=0.25, inertia=UnitInertia(3E-3, 3E-3, 3E-3), side=0.05):
+def add_box_at_location(mbp, name, color, pose, mass=0.25, inertia=UnitInertia(3E-3, 3E-3, 3E-3),side=0.05):
     ''' Adds a {side}cm cube at the specified pose. Uses a planar floating base
     in the x-z plane. '''
     no_mass_no_inertia = SpatialInertia(
@@ -295,7 +303,7 @@ def add_box_at_location(mbp, name, color, pose, mass=0.25, inertia=UnitInertia(3
     body_mass_and_inertia = SpatialInertia(
             mass=mass, p_PScm_E=np.array([0., 0., 0.]),
             G_SP_E=inertia)
-    shape = Box(side, side, side)
+    shape = Box(side,side,side)
     model_instance = mbp.AddModelInstance(name)
     body = mbp.AddRigidBody(name, model_instance, body_mass_and_inertia)
     RegisterVisualAndCollisionGeometry(
@@ -357,9 +365,11 @@ def main():
     blue_box_position = [0.5, 0., 0.025]
     red_box_unstack_position = [0.6, 0., 0.025]
     red_box_stack_position = [0.5, 0, 0.2]
-    red_box_stack_position_relative = np.array([0.02, 0, 0.20])
+    red_box_stack_position_relative = np.array([0.011, 0, 0.20])
     red_box_stack_position_relative_accurate = np.array([0.0, 0, 0.1])
     goal_delta = 0.05
+    position_a = [0.8, 0, 0.075]
+    position_c = [0.6, 0, 0.025]
 
     parser = argparse.ArgumentParser(description=__doc__)
     MeshcatVisualizer.add_argparse_argument(parser)
@@ -383,9 +393,10 @@ def main():
     station.SetupManipulationClassStation()
     # add_goal_region_visual_geometry(mbp, goal_position, goal_delta)
     add_box_at_location(mbp, name="blue_box", color=[0.25, 0.25, 1., 1.],
-                        pose=RigidTransform(p=blue_box_position))
+                        pose=RigidTransform(p=blue_box_position), mass=1,
+                        side=0.03)
     add_box_at_location(mbp, name="red_box", color=[1., 0.25, 0.25, 1.],
-                        pose=RigidTransform(p=red_box_unstack_position), side=0.1)
+                        pose=RigidTransform(p=position_a), side=0.07)
     station.Finalize()
     iiwa_q0 = np.array([0.0, 0.6, 0.0, -1.75, 0., 1., np.pi / 2.])
 
@@ -400,7 +411,7 @@ def main():
         plt.gca().clear()
         viz = builder.AddSystem(PlanarSceneGraphVisualizer(
             station.get_scene_graph(),
-            xlim=[0.25, 0.8], ylim=[-0.1, 0.5],
+            xlim=[0.25, 1], ylim=[-0.1, 0.7],
             ax=plt.gca()))
         builder.Connect(station.GetOutputPort("pose_bundle"),
                         viz.get_input_port(0))
@@ -431,24 +442,19 @@ def main():
             # SymbolL2Close("blue_box_in_goal", "blue_box", goal_position, goal_delta),
             # SymbolL2Close("red_box_in_goal", "red_box", goal_position, goal_delta),
             # SymbolRelativePositionL2("blue_box_on_red_box", "blue_box", "red_box", l2_thresh=0.01, offset=np.array([0., 0., 0.05])),
-            SymbolRelativePositionL2("red_box_on_blue_box", "red_box", "blue_box", l2_thresh=0.03, offset=np.array([0., 0., 0.05]))
+            SymbolRelativePositionL2("red_box_on_blue_box", "red_box", "blue_box", l2_thresh=0.03, offset=np.array([0., 0., 0.05])),
+            SymbolL2Close("red_box_position_a", "red_box", position_a, goal_delta),
+            SymbolL2Close("red_box_position_c", "red_box", position_c, goal_delta)
         ]
         primitive_list = [
-            # MoveBoxPrimitive("put_blue_box_in_goal", mbp, "blue_box", goal_position),
-            # MoveBoxPrimitive("put_red_box_in_goal", mbp, "red_box", goal_position),
-            # MoveBoxPrimitive("put_blue_box_away", mbp, "blue_box", blue_box_clean_position),
-            # MoveBoxPrimitive("put_red_box_away", mbp, "red_box", red_box_clean_position),
-            # MoveBoxPrimitive("put_red_box_on_blue_box", mbp, "red_box", np.array([0., 0., 0.05]), "blue_box"),
-            # MoveBoxPrimitive("put_blue_box_on_red_box", mbp, "blue_box", np.array([0., 0., 0.05]), "red_box"),
-            # MoveBoxPrimitive("stack_red", mbp, "red_box", red_box_stack_position),
-            MoveBoxPrimitive("stack_red", mbp, "red_box", red_box_stack_position_relative, "blue_box"),
-            MoveBoxPrimitive("unstack_red", mbp, "red_box", red_box_unstack_position),
+            MoveBoxFromShelfPrimitive("red_a_to_stack", mbp, "red_box", red_box_stack_position_relative, "blue_box"),
+            MoveBoxPrimitive("red_unstack_to_a", mbp, "red_box", position_a),
             MoveBoxPrimitive("extra_action",mbp,"red_box",red_box_stack_position_relative_accurate, "blue_box")
         ]
         task_execution_system = builder.AddSystem(
             TaskExectionSystem(
                 mbp, symbol_list=symbol_list, primitive_list=primitive_list,
-                dfa_json_file="specifications/red_stacking/red_stacking_add_action.json"))
+                dfa_json_file="specifications/red_stacking_more_complicated/red_stacking_more_complicated_add_action.json"))
 
         builder.Connect(
             station.GetOutputPort("plant_continuous_state"),
