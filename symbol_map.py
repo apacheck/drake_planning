@@ -77,3 +77,15 @@ class SymbolL2Close(SymbolFromTransform):
     def __call__(self, rigid_transform_dict):
         t = rigid_transform_dict[self._object_name].translation()
         return np.linalg.norm(t - self._position) < self._delta
+
+class SymbolXClose(SymbolFromTransform):
+    def __init__(self, name, object_name, position, delta):
+        super(SymbolXClose, self).__init__(name)
+        self._object_name = object_name
+        self._object_names = [self._object_name]
+        self._position = position
+        self._delta = delta
+
+    def __call__(self, rigid_transform_dict):
+        t = rigid_transform_dict[self._object_name].translation()
+        return np.linalg.norm(t[0] - self._position[0]) < self._delta

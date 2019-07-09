@@ -362,14 +362,13 @@ def add_goal_region_visual_geometry(mbp, goal_position, goal_delta):
 
 def main():
     # goal_position = np.array([0.5, 0., 0.025])
-    blue_box_position = [0.5, 0., 0.025]
-    red_box_unstack_position = [0.6, 0., 0.025]
-    red_box_stack_position = [0.5, 0, 0.2]
-    red_box_stack_position_relative = np.array([0.011, 0, 0.20])
-    red_box_stack_position_relative_accurate = np.array([0.0, 0, 0.1])
+    loc_a = [0.4, 0., 0.025]
+    loc_b = [0.5, 0., 0.025]
+    loc_c = [0.6, 0., 0.025]
+    stack_offset = [0., 0., 0.05]
     goal_delta = 0.05
-    position_a = [0.4, 0, 0.075]
-    position_c = [0.6, 0, 0.025]
+    shelf_lower = [0.8, 0, 0.175]
+    shelf_upper = [0.8, 0, 0.45]
 
     parser = argparse.ArgumentParser(description=__doc__)
     MeshcatVisualizer.add_argparse_argument(parser)
@@ -393,10 +392,10 @@ def main():
     station.SetupManipulationClassStation()
     # add_goal_region_visual_geometry(mbp, goal_position, goal_delta)
     add_box_at_location(mbp, name="blue_box", color=[0.25, 0.25, 1., 1.],
-                        pose=RigidTransform(p=blue_box_position), mass=1,
-                        side=0.03)
+                        pose=RigidTransform(p=shelf_upper), mass=0.25,
+                        side=0.05)
     add_box_at_location(mbp, name="red_box", color=[1., 0.25, 0.25, 1.],
-                        pose=RigidTransform(p=position_a), side=0.07)
+                        pose=RigidTransform(p=shelf_lower), side=0.05)
     station.Finalize()
     iiwa_q0 = np.array([0.0, 0.6, 0.0, -1.75, 0., 1., np.pi / 2.])
 
@@ -439,22 +438,44 @@ def main():
 
     if not args.teleop:
         symbol_list = [
-            # SymbolL2Close("blue_box_in_goal", "blue_box", goal_position, goal_delta),
-            # SymbolL2Close("red_box_in_goal", "red_box", goal_position, goal_delta),
-            # SymbolRelativePositionL2("blue_box_on_red_box", "blue_box", "red_box", l2_thresh=0.01, offset=np.array([0., 0., 0.05])),
-            SymbolRelativePositionL2("red_box_on_blue_box", "red_box", "blue_box", l2_thresh=0.03, offset=np.array([0., 0., 0.05])),
-            SymbolL2Close("red_box_position_a", "red_box", position_a, goal_delta),
-            SymbolL2Close("red_box_position_c", "red_box", position_c, goal_delta)
+            SymbolRelativePositionL2("red_on_blue", "red_box", "blue_box", l2_thresh=0.03,
+                                     offset=np.array(stack_offset)),
+            SymbolRelativePositionL2("blue_on_red", "blue_box", "red_box", l2_thresh=0.03,
+                                     offset=np.array(stack_offset)),
+            SymbolXClose("red_loc_a", "red_box", loc_a, goal_delta),
+            SymbolXClose("red_loc_b", "red_box", loc_b, goal_delta),
+            SymbolXClose("red_loc_c", "red_box", loc_c, goal_delta),
+            SymbolL2Close("red_shelf_lower", "red_box", shelf_lower, goal_delta),
+            SymbolXClose("blue_loc_a", "blue_box", loc_a, goal_delta),
+            SymbolXClose("blue_loc_b", "blue_box", loc_b, goal_delta),
+            SymbolXClose("blue_loc_c", "blue_box", loc_c, goal_delta),
+            SymbolL2Close("blue_shelf_upper", "blue_box", shelf_upper, goal_delta)
         ]
         primitive_list = [
-            MoveBoxPrimitive("red_a_to_stack", mbp, "red_box", red_box_stack_position_relative, "blue_box"),
-            MoveBoxPrimitive("red_unstack_to_a", mbp, "red_box", position_a),
-            MoveBoxPrimitive("extra_action",mbp,"red_box",red_box_stack_position_relative_accurate, "blue_box")
+            MoveBoxFromShelfPrimitive("move_red_shelf_lower_to_a", mbp, "red_box", loc_a),
+            MoveBoxFromShelfPrimitive("move_red_shelf_lower_to_b", mbp, "red_box", loc_b),
+            MoveBoxFromShelfPrimitive("move_red_shelf_lower_to_c", mbp, "red_box", loc_c),
+            MoveBoxFromShelfPrimitive("move_blue_shelf_upper_to_a", mbp, "blue_box", loc_a),
+            MoveBoxFromShelfPrimitive("move_blue_shelf_upper_to_b", mbp, "blue_box", loc_b),
+            MoveBoxFromShelfPrimitive("move_blue_shelf_upper_to_c", mbp, "blue_box", loc_c),
+            MoveBoxPrimitive("move_red_to_a", mbp, "red_box", loc_a),
+            MoveBoxPrimitive("move_red_to_b", mbp, "red_box", loc_b),
+            MoveBoxPrimitive("move_red_to_c", mbp, "red_box", loc_c),
+            MoveBoxPrimitive("move_blue_to_a", mbp, "blue_box", loc_a),
+            MoveBoxPrimitive("move_blue_to_b", mbp, "blue_box", loc_b),
+            MoveBoxPrimitive("move_blue_to_c", mbp, "blue_box", loc_c),
+            MoveBoxPrimitive("move_red_to_a_on_blue", mbp, "red_box", stack_offset, "blue_box"),
+            MoveBoxPrimitive("move_red_to_b_on_blue", mbp, "red_box", stack_offset, "blue_box"),
+            MoveBoxPrimitive("move_red_to_c_on_blue", mbp, "red_box", stack_offset, "blue_box"),
+            MoveBoxPrimitive("move_blue_to_a_on_red", mbp, "blue_box", stack_offset, "red_box"),
+            MoveBoxPrimitive("move_blue_to_b_on_red", mbp, "blue_box", stack_offset, "red_box"),
+            MoveBoxPrimitive("move_blue_to_c_on_red", mbp, "blue_box", stack_offset, "red_box"),
+            MoveBoxPrimitive("extra_action", mbp, "blue_box", stack_offset, "blue_box")
         ]
         task_execution_system = builder.AddSystem(
             TaskExectionSystem(
                 mbp, symbol_list=symbol_list, primitive_list=primitive_list,
-                dfa_json_file="specifications/red_stacking_more_complicated/red_stacking_more_complicated_add_action.json"))
+                dfa_json_file="specifications/shelf/shelf.json"))
 
         builder.Connect(
             station.GetOutputPort("plant_continuous_state"),

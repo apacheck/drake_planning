@@ -118,47 +118,73 @@ class MoveBoxFromShelfPrimitive(IiwaAndGripperPrimitive):
             adjusted_goal_position += self.mbp.EvalBodyPoseInWorld(mbp_context, self.offset_body).translation()
         start_ee_pose = self.mbp.EvalBodyPoseInWorld(
             mbp_context, self.mbp.GetBodyByName("iiwa_link_7"))
-        grasp_offset = np.array([0.225, 0., 0.0]) # Amount *all* target points are shifted up
-        up_offset = np.array([0., 0., 0.1])      # Additional amount to lift objects off of table
+        grasp_offset = np.array([0.225, 0., 0.0]) # Amount *all* target points are shifted to the left
+        grasp_offset_vert = np.array([0., 0., 0.225])
+        up_offset = np.array([0., 0., 0.05])      # Additional amount to lift objects off of table
+        left_offset = np.array([0.225, 0., 0.025])     # Additional amount to be left of the block
         # Timing:
-        #    0       :  t_reach: move over object
-        #    t_reach :  t_touch: move down to object
+        #    0       :  t_reach: move to left of object
+        #    t_reach :  t_touch: move over to object
         #    t_touch :  t_grasp: close gripper
         #    t_grasp :  t_lift : pick up object
         #    t_lift  :  t_move : move object over destination
         #    t_move  :  t_down : move object down
         #    t_down  :  t_drop : open gripper
         #    t_drop  :  t_done : rise back up
-        t_each = 0.25
-        t_reach = 0. + t_each
+        t_each = 0.5
+        t_rotate = 0. + t_each
+        t_down1 = t_rotate + t_each
+        t_reach = t_down1 + t_each
         t_touch = t_reach + t_each
         t_grasp = t_touch + t_each
         t_lift = t_grasp + t_each
-        t_move = t_lift + t_each
+        t_retract = t_lift + t_each
+        t_move = t_retract + t_each
         t_down = t_move + t_each
-        t_drop = t_down + t_each
+        t_wait = t_down + t_each
+        t_drop = t_wait + t_each
         t_done = t_drop + t_each
-        ts = np.array([0., t_reach, t_touch, t_grasp, t_lift, t_move, t_down, t_drop, t_done])
+        ts = np.array([0., t_rotate, t_down1, t_reach, t_touch, t_grasp, t_lift, t_retract, t_move, t_down, t_wait, t_drop, t_done])
         ee_xyz_knots = np.vstack([
-            start_ee_pose.translation() - grasp_offset,
-            start_position + up_offset,
-            start_position,
-            start_position,
-            start_position + up_offset,
-            adjusted_goal_position + up_offset,
-            adjusted_goal_position,
-            adjusted_goal_position,
-            adjusted_goal_position + up_offset,
+            start_ee_pose.translation(),
+            start_ee_pose.translation() - np.array([0., 0., 0.3]),
+            start_position - np.array([.3, 0., 0.]),
+            # start_ee_pose.translation() - np.array([0., 0., 0.2]),
+            # start_ee_pose.translation() - grasp_offset,
+            start_position - left_offset,
+            start_position - left_offset,
+            start_position - left_offset,
+            start_position + up_offset - left_offset,
+            start_position + up_offset - np.array([0.4, 0., 0.]),
+            adjusted_goal_position + up_offset + grasp_offset_vert,
+            adjusted_goal_position + grasp_offset_vert - np.array([0., 0., 0.0]),
+            adjusted_goal_position + grasp_offset_vert - np.array([-0.01, 0., 0.0]),
+            adjusted_goal_position + grasp_offset_vert - np.array([0., 0., 0.0]),
+            adjusted_goal_position + up_offset + grasp_offset_vert,
         ]).T
-        ee_xyz_knots += np.tile(grasp_offset, [len(ts), 1]).T
 
-        ee_rpy_knots = np.array([-np.pi, -np.pi/2., 0.])
-        ee_rpy_knots = np.tile(ee_rpy_knots, [len(ts), 1]).T
+        # ee_xyz_knots += np.tile(grasp_offset, [len(ts), 1]).T
+
+        ee_rpy_knots_vert = np.array([-np.pi, 0., 0.])
+        ee_rpy_knots_hor = np.array([-np.pi, -np.pi/2., 0.])
+        ee_rpy_knots = np.vstack([ee_rpy_knots_hor,
+                                  ee_rpy_knots_hor,
+                                  ee_rpy_knots_hor,
+                                  ee_rpy_knots_hor,
+                                  ee_rpy_knots_hor,
+                                  ee_rpy_knots_hor,
+                                  ee_rpy_knots_hor,
+                                  ee_rpy_knots_hor,
+                                  ee_rpy_knots_vert,
+                                  ee_rpy_knots_vert,
+                                  ee_rpy_knots_vert,
+                                  ee_rpy_knots_vert,
+                                  ee_rpy_knots_vert]).T
         ee_rpyxyz_knots = np.vstack([ee_rpy_knots, ee_xyz_knots])
         ee_rpyxyz_traj = PiecewisePolynomial.FirstOrderHold(
             ts, ee_rpyxyz_knots)
 
-        gripper_knots = np.array([[0.1, 0.1, 0.1, 0., 0., 0., 0., 0.1, 0.1]])
+        gripper_knots = np.array([[0.1, 0.1, 0.1, 0.1, 0.1, 0., 0., 0., 0., 0., 0., 0.1, 0.1]])
         gripper_traj = PiecewisePolynomial.FirstOrderHold(
             ts, gripper_knots)
         return ee_rpyxyz_traj, gripper_traj
