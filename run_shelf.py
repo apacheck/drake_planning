@@ -4,6 +4,12 @@ import os
 import random
 import sys
 
+import time
+
+
+# import matplotlib
+# matplotlib.use('Qt5Agg')
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pydot
@@ -53,6 +59,7 @@ from differential_ik import DifferentialIK
 
 from symbol_map import *
 from primitives import *
+
 
 
 class TaskExectionSystem(LeafSystem):
@@ -170,6 +177,7 @@ class TaskExectionSystem(LeafSystem):
             t - state_object.start_time >= state_object.wsg_position_traj.end_time())
         )
         if (trajectory_is_done and velocities_are_zero):
+            START = False
             # Check each symbol against current mbp_context
             curr_state_vector = []
             for symbol in self.environment_symbols:
@@ -343,7 +351,7 @@ def add_box_at_location(mbp, name, color, pose, mass=0.25, inertia=UnitInertia(3
         damping=0.)
     mbp.AddJoint(body_joint_theta)
 
-def add_goal_region_visual_geometry(mbp, goal_position, goal_delta):
+def add_goal_region_visual_geometry(mbp, goal_position, goal_delta, name, color=[0.4, 0.9, 0.4, 0.35]):
     ''' Adds a 5cm cube at the specified pose. Uses a planar floating base
     in the x-z plane. '''
     shape = Box(goal_delta, goal_delta, goal_delta)
@@ -351,24 +359,24 @@ def add_goal_region_visual_geometry(mbp, goal_position, goal_delta):
             mass=0., p_PScm_E=np.array([0., 0., 0.]),
             G_SP_E=UnitInertia(0., 0., 0.))
     shape = Sphere(0.05)
-    model_instance = mbp.AddModelInstance("goal_vis")
+    model_instance = mbp.AddModelInstance(name)
     vis_origin_frame = mbp.AddFrame(frame=FixedOffsetFrame(
             name="goal_vis_origin", P=mbp.world_frame(),
             X_PF=RigidTransform(p=(goal_position + np.array([0., 0.5, 0.])))))
     body = mbp.AddRigidBody("goal_vis", model_instance, no_mass_no_inertia)
 
     mbp.WeldFrames(vis_origin_frame, body.body_frame())
-    mbp.RegisterVisualGeometry(body, RigidTransform(), shape, "goal_vis", [0.4, 0.9, 0.4, 0.35])
+    mbp.RegisterVisualGeometry(body, RigidTransform(), shape, name, color)
 
 def main():
     # goal_position = np.array([0.5, 0., 0.025])
-    loc_a = [0.4, 0., 0.025]
-    loc_b = [0.5, 0., 0.025]
-    loc_c = [0.6, 0., 0.025]
+    loc_b = [0.4, 0., 0.075]
+    loc_c = [0.5, 0., 0.075]
+    loc_d = [0.6, 0., 0.075]
     stack_offset = [0., 0., 0.05]
     goal_delta = 0.05
-    shelf_lower = [0.8, 0, 0.175]
-    shelf_upper = [0.8, 0, 0.45]
+    shelf_lower = [0.8, 0, 0.15]
+    shelf_upper = [0.8, 0, 0.425]
 
     parser = argparse.ArgumentParser(description=__doc__)
     MeshcatVisualizer.add_argparse_argument(parser)
@@ -381,8 +389,13 @@ def main():
     parser.add_argument('--teleop', action='store_true',
                         help="Enable teleop, so *don't* use the state machine"
                              " and motion primitives.")
+    parser.add_argument('json', default='',
+                        help="Json file")
 
     args = parser.parse_args()
+    file_json = args.json
+    if not file_json:
+        raise("Need json file")
 
     builder = DiagramBuilder()
 
@@ -390,7 +403,11 @@ def main():
     station = builder.AddSystem(ManipulationStation(0.001))
     mbp = station.get_multibody_plant()
     station.SetupManipulationClassStation()
-    # add_goal_region_visual_geometry(mbp, goal_position, goal_delta)
+    add_goal_region_visual_geometry(mbp, loc_b, goal_delta, "loc_b", [0.4, 0.9, 0.4, 0.35])
+    add_goal_region_visual_geometry(mbp, loc_c, goal_delta, "loc_c", [0.9, 0.4, 0.4, 0.35])
+    add_goal_region_visual_geometry(mbp, loc_d, goal_delta, "loc_d", [0.4, 0.4, 0.9, 0.35])
+    add_goal_region_visual_geometry(mbp, shelf_lower, goal_delta, "shelf_lower", [0.9, 0.4, 0.4, 0.35])
+    add_goal_region_visual_geometry(mbp, shelf_upper, goal_delta, "shelf_upper", [0.4, 0.4, 0.9, 0.35])
     add_box_at_location(mbp, name="blue_box", color=[0.25, 0.25, 1., 1.],
                         pose=RigidTransform(p=shelf_upper), mass=0.25,
                         side=0.05)
@@ -415,6 +432,7 @@ def main():
         builder.Connect(station.GetOutputPort("pose_bundle"),
                         viz.get_input_port(0))
         plt.draw()
+
 
     # Hook up DifferentialIK, since both control modes use it.
     robot = station.get_controller_plant()
@@ -442,40 +460,34 @@ def main():
                                      offset=np.array(stack_offset)),
             SymbolRelativePositionL2("blue_on_red", "blue_box", "red_box", l2_thresh=0.03,
                                      offset=np.array(stack_offset)),
-            SymbolXClose("red_loc_a", "red_box", loc_a, goal_delta),
-            SymbolXClose("red_loc_b", "red_box", loc_b, goal_delta),
-            SymbolXClose("red_loc_c", "red_box", loc_c, goal_delta),
-            SymbolL2Close("red_shelf_lower", "red_box", shelf_lower, goal_delta),
-            SymbolXClose("blue_loc_a", "blue_box", loc_a, goal_delta),
-            SymbolXClose("blue_loc_b", "blue_box", loc_b, goal_delta),
-            SymbolXClose("blue_loc_c", "blue_box", loc_c, goal_delta),
-            SymbolL2Close("blue_shelf_upper", "blue_box", shelf_upper, goal_delta)
+            SymbolXClose("b_red", "red_box", loc_b, goal_delta),
+            SymbolXClose("c_red", "red_box", loc_c, goal_delta),
+            SymbolXClose("d_red", "red_box", loc_d, goal_delta),
+            SymbolL2Close("a1_red", "red_box", shelf_lower, goal_delta),
+            SymbolXClose("b_blue", "blue_box", loc_b, goal_delta),
+            SymbolXClose("c_blue", "blue_box", loc_c, goal_delta),
+            SymbolXClose("d_blue", "blue_box", loc_d, goal_delta),
+            SymbolL2Close("a2_blue", "blue_box", shelf_upper, goal_delta)
         ]
         primitive_list = [
-            MoveBoxFromShelfPrimitive("move_red_shelf_lower_to_a", mbp, "red_box", loc_a),
-            MoveBoxFromShelfPrimitive("move_red_shelf_lower_to_b", mbp, "red_box", loc_b),
-            MoveBoxFromShelfPrimitive("move_red_shelf_lower_to_c", mbp, "red_box", loc_c),
-            MoveBoxFromShelfPrimitive("move_blue_shelf_upper_to_a", mbp, "blue_box", loc_a),
-            MoveBoxFromShelfPrimitive("move_blue_shelf_upper_to_b", mbp, "blue_box", loc_b),
-            MoveBoxFromShelfPrimitive("move_blue_shelf_upper_to_c", mbp, "blue_box", loc_c),
-            MoveBoxPrimitive("move_red_to_a", mbp, "red_box", loc_a),
-            MoveBoxPrimitive("move_red_to_b", mbp, "red_box", loc_b),
-            MoveBoxPrimitive("move_red_to_c", mbp, "red_box", loc_c),
-            MoveBoxPrimitive("move_blue_to_a", mbp, "blue_box", loc_a),
-            MoveBoxPrimitive("move_blue_to_b", mbp, "blue_box", loc_b),
-            MoveBoxPrimitive("move_blue_to_c", mbp, "blue_box", loc_c),
-            MoveBoxPrimitive("move_red_to_a_on_blue", mbp, "red_box", stack_offset, "blue_box"),
-            MoveBoxPrimitive("move_red_to_b_on_blue", mbp, "red_box", stack_offset, "blue_box"),
-            MoveBoxPrimitive("move_red_to_c_on_blue", mbp, "red_box", stack_offset, "blue_box"),
-            MoveBoxPrimitive("move_blue_to_a_on_red", mbp, "blue_box", stack_offset, "red_box"),
-            MoveBoxPrimitive("move_blue_to_b_on_red", mbp, "blue_box", stack_offset, "red_box"),
-            MoveBoxPrimitive("move_blue_to_c_on_red", mbp, "blue_box", stack_offset, "red_box"),
-            MoveBoxPrimitive("extra_action", mbp, "blue_box", stack_offset, "blue_box")
+            MoveBoxFromShelfPrimitive("move_a1_red_to_b", mbp, "red_box", loc_b),
+            MoveBoxFromShelfPrimitive("move_a1_red_to_c", mbp, "red_box", loc_c),
+            MoveBoxFromShelfPrimitive("move_a1_red_to_d", mbp, "red_box", loc_d),
+            MoveBoxFromShelfPrimitive("move_a2_blue_to_b", mbp, "blue_box", loc_b),
+            MoveBoxFromShelfPrimitive("move_a2_blue_to_c", mbp, "blue_box", loc_c),
+            MoveBoxFromShelfPrimitive("move_a2_blue_to_d", mbp, "blue_box", loc_d),
+            MoveBoxPrimitive("move_to_b_red", mbp, "red_box", loc_b),
+            MoveBoxPrimitive("move_to_c_red", mbp, "red_box", loc_c),
+            MoveBoxPrimitive("move_to_d_red", mbp, "red_box", loc_d),
+            MoveBoxPrimitive("move_to_b_blue", mbp, "blue_box", loc_b),
+            MoveBoxPrimitive("move_to_c_blue", mbp, "blue_box", loc_c),
+            MoveBoxPrimitive("move_to_d_blue", mbp, "blue_box", loc_d),
+            MoveBoxToShelfPrimitive("extra_action", mbp, "blue_box", shelf_upper)
         ]
         task_execution_system = builder.AddSystem(
             TaskExectionSystem(
                 mbp, symbol_list=symbol_list, primitive_list=primitive_list,
-                dfa_json_file="specifications/shelf/shelf.json"))
+                dfa_json_file=file_json))
 
         builder.Connect(
             station.GetOutputPort("plant_continuous_state"),
