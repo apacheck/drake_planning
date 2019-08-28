@@ -61,6 +61,13 @@ from symbol_map import *
 from primitives import *
 
 
+# Seed the numpy random number generator
+SEED = 0
+np.random.seed(SEED)
+# NOISE_A = -.01
+# NOISE_B = .01
+NOISE_A = 0.
+NOISE_B = 0.
 
 class TaskExectionSystem(LeafSystem):
     ''' Given a compiled JSON DFA and lists of symbol and 
@@ -75,7 +82,7 @@ class TaskExectionSystem(LeafSystem):
     def __init__(self, mbp, symbol_list, primitive_list, dfa_json_file, update_period=0.1):
         LeafSystem.__init__(self)
 
-        self.box_names = ["red_box", "blue_box"]
+        self.box_names = ["red_box","blue_box"]
         self.mbp = mbp
         # Our version of MBP context, which we'll modify
         # in the publish method.
@@ -186,6 +193,7 @@ class TaskExectionSystem(LeafSystem):
                 pose_dict = {}
                 for name in symbol._object_names:
                     pose_dict[name] = self.mbp.EvalBodyPoseInWorld(self.mbp_context, self.mbp.GetBodyByName(name))
+                    print("{} = {}".format(name, pose_dict[name].translation()))
                 curr_state_vector.append(symbol(pose_dict))
             curr_state_vector = np.array(curr_state_vector)
             print("Current state vector: ", curr_state_vector)
@@ -223,8 +231,9 @@ class TaskExectionSystem(LeafSystem):
                     primitive = random.choice(primitive_options)
 
             print("Applying primitive {}".format(primitive.name))
+            rand = NOISE_A + (NOISE_B - NOISE_A) * np.random.random_sample()
             state_object.rpy_xyz_desired_traj, state_object.wsg_position_traj = \
-                primitive.generate_rpyxyz_and_gripper_trajectory(self.mbp_context)
+                primitive.generate_rpyxyz_and_gripper_trajectory(self.mbp_context, rand)
             state_object.start_time = context.get_time()
             state.get_mutable_abstract_state().get_value(0).set_value(state_object)
 
@@ -370,13 +379,20 @@ def add_goal_region_visual_geometry(mbp, goal_position, goal_delta, name, color=
 
 def main():
     # goal_position = np.array([0.5, 0., 0.025])
-    loc_b = [0.4, 0., 0.075]
-    loc_c = [0.5, 0., 0.075]
-    loc_d = [0.6, 0., 0.075]
+    loc_b = [0.4, 0., 0.025]
+    loc_c = [0.5, 0., 0.025]
+    loc_d = [0.65, 0., 0.025]
+    # loc_c_high = [0.52, 0.0, 0.15]
+    loc_c_high = [0.525, 0.0, 0.15]
+    # loc_c_relative = [0.01, 0.0, 0.1]
+    loc_c_relative = [0.00, 0.0, 0.2]
     loc_b_vis = [0.4, 0., 0.025]
     loc_c_vis = [0.5, 0., 0.025]
     loc_d_vis = [0.6, 0., 0.025]
     stack_offset = [0., 0., 0.05]
+    delta_b = 0.075
+    delta_c = 0.025
+    delta_d = 0.125
     goal_delta = 0.05
     shelf_lower = [0.8, 0, 0.15]
     shelf_upper = [0.8, 0, 0.425]
@@ -408,16 +424,16 @@ def main():
     station = builder.AddSystem(ManipulationStation(0.001))
     mbp = station.get_multibody_plant()
     station.SetupManipulationClassStation()
-    add_goal_region_visual_geometry(mbp, loc_b_vis, goal_delta, "loc_b_vis", [0.88, 0.88, 0.88, 0.35])
-    add_goal_region_visual_geometry(mbp, loc_c_vis, goal_delta, "loc_c_vis", [0.88, 0.88, 0.88, 0.35])
-    add_goal_region_visual_geometry(mbp, loc_d_vis, goal_delta, "loc_d_vis", [0.88, 0.88, 0.88, 0.35])
-    add_goal_region_visual_geometry(mbp, shelf_lower_vis, goal_delta, "shelf_lower_vis", [0.9, 0.4, 0.4, 0.35])
-    add_goal_region_visual_geometry(mbp, shelf_upper_vis, goal_delta, "shelf_upper_vis", [0.4, 0.4, 0.9, 0.35])
+    # add_goal_region_visual_geometry(mbp, loc_b_vis, goal_delta, "loc_b_vis", [0.88, 0.88, 0.88, 0.35])
+    # add_goal_region_visual_geometry(mbp, loc_c_vis, goal_delta, "loc_c_vis", [0.88, 0.88, 0.88, 0.35])
+    # add_goal_region_visual_geometry(mbp, loc_d_vis, goal_delta, "loc_d_vis", [0.88, 0.88, 0.88, 0.35])
+    # add_goal_region_visual_geometry(mbp, shelf_lower_vis, goal_delta, "shelf_lower_vis", [0.9, 0.4, 0.4, 0.35])
+    # add_goal_region_visual_geometry(mbp, shelf_upper_vis, goal_delta, "shelf_upper_vis", [0.4, 0.4, 0.9, 0.35])
     add_box_at_location(mbp, name="blue_box", color=[0.25, 0.25, 1., 1.],
-                        pose=RigidTransform(p=shelf_upper), mass=0.25,
+                        pose=RigidTransform(p=loc_c), mass=2,
                         side=0.05)
     add_box_at_location(mbp, name="red_box", color=[1., 0.25, 0.25, 1.],
-                        pose=RigidTransform(p=shelf_lower), side=0.05)
+                        pose=RigidTransform(p=loc_b), side=0.05)
     station.Finalize()
     iiwa_q0 = np.array([0.0, 0.6, 0.0, -1.75, 0., 1., np.pi / 2.])
 
@@ -465,28 +481,29 @@ def main():
                                      offset=np.array(stack_offset)),
             SymbolRelativePositionL2("blue_on_red", "blue_box", "red_box", l2_thresh=0.03,
                                      offset=np.array(stack_offset)),
-            SymbolXClose("b_red", "red_box", loc_b, goal_delta),
-            SymbolXClose("c_red", "red_box", loc_c, goal_delta),
-            SymbolXClose("d_red", "red_box", loc_d, goal_delta),
+            SymbolXClose("b_red", "red_box", loc_b, delta_b),
+            SymbolXClose("c_red", "red_box", loc_c, delta_c),
+            SymbolXClose("d_red", "red_box", loc_d, delta_d),
             SymbolL2Close("a1_red", "red_box", shelf_lower, goal_delta),
-            SymbolXClose("b_blue", "blue_box", loc_b, goal_delta),
-            SymbolXClose("c_blue", "blue_box", loc_c, goal_delta),
-            SymbolXClose("d_blue", "blue_box", loc_d, goal_delta),
+            SymbolXClose("b_blue", "blue_box", loc_b, delta_b),
+            SymbolXClose("c_blue", "blue_box", loc_c, delta_c),
+            SymbolXClose("d_blue", "blue_box", loc_d, delta_d),
             SymbolL2Close("a2_blue", "blue_box", shelf_upper, goal_delta)
         ]
         primitive_list = [
-            MoveBoxFromShelfPrimitive("move_a1_red_to_b", mbp, "red_box", loc_b),
-            MoveBoxFromShelfPrimitive("move_a1_red_to_c", mbp, "red_box", loc_c),
-            MoveBoxFromShelfPrimitive("move_a1_red_to_d", mbp, "red_box", loc_d),
-            MoveBoxFromShelfPrimitive("move_a2_blue_to_b", mbp, "blue_box", loc_b),
-            MoveBoxFromShelfPrimitive("move_a2_blue_to_c", mbp, "blue_box", loc_c),
-            MoveBoxFromShelfPrimitive("move_a2_blue_to_d", mbp, "blue_box", loc_d),
-            MoveBoxPrimitive("move_to_b_red", mbp, "red_box", loc_b),
-            MoveBoxPrimitive("move_to_c_red", mbp, "red_box", loc_c),
-            MoveBoxPrimitive("move_to_d_red", mbp, "red_box", loc_d),
-            MoveBoxPrimitive("move_to_b_blue", mbp, "blue_box", loc_b),
-            MoveBoxPrimitive("move_to_c_blue", mbp, "blue_box", loc_c),
-            MoveBoxPrimitive("move_to_d_blue", mbp, "blue_box", loc_d),
+            # MoveBoxFromShelfPrimitive("move_a1_red_to_b", mbp, "red_box", loc_b),
+            # MoveBoxFromShelfPrimitive("move_a1_red_to_c", mbp, "red_box", loc_c),
+            # MoveBoxFromShelfPrimitive("move_a1_red_to_d", mbp, "red_box", loc_d),
+            # MoveBoxFromShelfPrimitive("move_a2_blue_to_b", mbp, "blue_box", loc_b),
+            # MoveBoxFromShelfPrimitive("move_a2_blue_to_c", mbp, "blue_box", loc_c),
+            # MoveBoxFromShelfPrimitive("move_a2_blue_to_d", mbp, "blue_box", loc_d),
+            MoveBoxPrimitiveRotated("move_to_b_red", mbp, "red_box", loc_b),
+            MoveBoxPrimitiveRotated("move_to_d_red", mbp, "red_box", loc_d),
+            MoveBoxPrimitiveRotated("move_to_cd_red", mbp, "red_box", loc_c_relative, "blue_box"),
+            # MoveBoxPrimitive("move_to_d_red", mbp, "red_box", loc_d),
+            # MoveBoxPrimitive("move_to_b_blue", mbp, "blue_box", loc_b),
+            # MoveBoxPrimitive("move_to_c_blue", mbp, "blue_box", loc_c),
+            # MoveBoxPrimitive("move_to_d_blue", mbp, "blue_box", loc_d),
             MoveBoxToShelfPrimitive("extra_action", mbp, "blue_box", shelf_upper)
         ]
         task_execution_system = builder.AddSystem(

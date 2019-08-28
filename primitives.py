@@ -43,9 +43,11 @@ class MoveBoxPrimitive(IiwaAndGripperPrimitive):
         # TODO(gizatt) This is probably not always true
         return True
 
-    def generate_rpyxyz_and_gripper_trajectory(self, mbp_context):
+    def generate_rpyxyz_and_gripper_trajectory(self, mbp_context, rand=0):
         start_position = self.mbp.EvalBodyPoseInWorld(mbp_context, self.target_body).translation()
         adjusted_goal_position = self.goal_position.copy()
+        # Add randomness
+        adjusted_goal_position[0] + rand
         if self.offset_body:
             adjusted_goal_position += self.mbp.EvalBodyPoseInWorld(mbp_context, self.offset_body).translation()
         start_ee_pose = self.mbp.EvalBodyPoseInWorld(
@@ -277,6 +279,78 @@ class MoveBoxToShelfPrimitive(IiwaAndGripperPrimitive):
             ts, ee_rpyxyz_knots)
 
         gripper_knots = np.array([[0.1, 0.1, 0.1, -0.1, -0.1, -0.1, -0.1, 0.1, 0.1, 0.1]])
+        gripper_traj = PiecewisePolynomial.FirstOrderHold(
+            ts, gripper_knots)
+        return ee_rpyxyz_traj, gripper_traj
+
+class MoveBoxPrimitiveRotated(IiwaAndGripperPrimitive):
+    ''' Interface for primitive actions that can be run
+    on the ManipulationStation (Kuka IIWA + Schunk gripper).
+    Makes all decisions based on an MBP context.'''
+    def __init__(self, name, mbp, body_name, goal_position, position_relative_to_body=None):
+        IiwaAndGripperPrimitive.__init__(self, name, mbp)
+        self.goal_position = np.array(goal_position)
+        self.target_body = mbp.GetBodyByName(body_name)
+        if position_relative_to_body is not None:
+            self.offset_body = mbp.GetBodyByName(position_relative_to_body)
+        else:
+            self.offset_body = None
+
+    def is_valid(self, mbp_context):
+        # TODO(gizatt) This is probably not always true
+        return True
+
+    def generate_rpyxyz_and_gripper_trajectory(self, mbp_context, rand=0):
+        start_position = self.mbp.EvalBodyPoseInWorld(mbp_context, self.target_body).translation()
+        adjusted_goal_position = self.goal_position.copy()
+        # Add randomness
+        adjusted_goal_position[0] += rand
+        print(adjusted_goal_position)
+        if self.offset_body:
+            adjusted_goal_position += self.mbp.EvalBodyPoseInWorld(mbp_context, self.offset_body).translation()
+        start_ee_pose = self.mbp.EvalBodyPoseInWorld(
+            mbp_context, self.mbp.GetBodyByName("iiwa_link_7"))
+        grasp_offset = np.array([0.0, 0., 0.225]) # Amount *all* target points are shifted up
+        up_offset = np.array([0., 0., 0.1])      # Additional amount to lift objects off of table
+        # Timing:
+        #    0       :  t_reach: move over object
+        #    t_reach :  t_touch: move down to object
+        #    t_touch :  t_grasp: close gripper
+        #    t_grasp :  t_lift : pick up object
+        #    t_lift  :  t_move : move object over destination
+        #    t_move  :  t_down : move object down
+        #    t_down  :  t_drop : open gripper
+        #    t_drop  :  t_done : rise back up
+        t_each = 0.2
+        t_reach = 0. + t_each
+        t_touch = t_reach + t_each
+        t_grasp = t_touch + t_each
+        t_lift = t_grasp + t_each
+        t_move = t_lift + t_each
+        t_down = t_move + t_each
+        t_drop = t_down + t_each
+        t_done = t_drop + t_each
+        ts = np.array([0., t_reach, t_touch, t_grasp, t_lift, t_move, t_down, t_drop, t_done])
+        ee_xyz_knots = np.vstack([
+            start_ee_pose.translation() - grasp_offset,
+            start_position + up_offset,
+            start_position,
+            start_position,
+            start_position + up_offset,
+            adjusted_goal_position + up_offset,
+            adjusted_goal_position,
+            adjusted_goal_position,
+            adjusted_goal_position + up_offset,
+        ]).T
+        ee_xyz_knots += np.tile(grasp_offset, [len(ts), 1]).T
+
+        ee_rpy_knots = np.array([-np.pi, 0., np.pi])
+        ee_rpy_knots = np.tile(ee_rpy_knots, [len(ts), 1]).T
+        ee_rpyxyz_knots = np.vstack([ee_rpy_knots, ee_xyz_knots])
+        ee_rpyxyz_traj = PiecewisePolynomial.FirstOrderHold(
+            ts, ee_rpyxyz_knots)
+
+        gripper_knots = np.array([[0.1, 0.1, 0.1, 0., 0., 0., 0., 0.1, 0.1]])
         gripper_traj = PiecewisePolynomial.FirstOrderHold(
             ts, gripper_knots)
         return ee_rpyxyz_traj, gripper_traj

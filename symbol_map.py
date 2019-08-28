@@ -88,4 +88,6 @@ class SymbolXClose(SymbolFromTransform):
 
     def __call__(self, rigid_transform_dict):
         t = rigid_transform_dict[self._object_name].translation()
+        print("{}: {}".format(self.name, np.linalg.norm(t[0] - self._position[0])))
+        print("delta: {}".format(self._delta))
         return np.linalg.norm(t[0] - self._position[0]) < self._delta
