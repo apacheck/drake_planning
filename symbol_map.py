@@ -21,7 +21,7 @@ class SymbolFromTransformLog(object):
 
     def print_curr_symbols(self):
         for i, sym in enumerate(self._symbol_list):
-            print '\tSymbol %s: %s' % (sym.name, str(self._symbol_assignment_list[-1][i]))
+            print('\tSymbol {}: {}'.format(sym.name, str(self._symbol_assignment_list[-1][i])))
 
 
 class SymbolFromTransform(object):

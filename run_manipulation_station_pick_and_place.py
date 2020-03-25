@@ -9,8 +9,8 @@ import numpy as np
 import pydot
 
 from pydrake.examples.manipulation_station import (
-    ManipulationStation, ManipulationStationHardwareInterface,
-    CreateDefaultYcbObjectList)
+    ManipulationStation, ManipulationStationHardwareInterface)
+    # CreateDefaultYcbObjectList)
 from pydrake.geometry import (
     Box, Sphere
 )
@@ -24,14 +24,14 @@ from pydrake.multibody.tree import (
 )
 from pydrake.multibody.plant import (
     MultibodyPlant, CoulombFriction)
-from pydrake.manipulation.planner import (
-    DifferentialInverseKinematicsParameters)
-from pydrake.manipulation.robot_plan_runner import (
-    PlanData,
-    PlanSender,
-    PlanType,
-    RobotPlanRunner
-)
+# from pydrake.manipulation.planner import (
+#     DifferentialInverseKinematicsParameters)
+# from pydrake.manipulation.robot_plan_runner import (
+#     PlanData,
+#     PlanSender,
+#     PlanType,
+#     RobotPlanRunner
+# )
 from pydrake.manipulation.planner import (
     DifferentialInverseKinematicsParameters)
 from pydrake.math import RigidTransform, RollPitchYaw
@@ -47,7 +47,8 @@ from pydrake.systems.primitives import (
     TrajectorySource
 )
 
-from underactuated.planar_scenegraph_visualizer import PlanarSceneGraphVisualizer
+# from underactuated.planar_scenegraph_visualizer import PlanarSceneGraphVisualizer
+from pydrake.all import PlanarSceneGraphVisualizer
 from mouse_keyboard_teleop import MouseKeyboardTeleop, print_instructions
 from differential_ik import DifferentialIK
 
@@ -441,7 +442,7 @@ def main():
         task_execution_system = builder.AddSystem(
             TaskExectionSystem(
                 mbp, symbol_list=symbol_list, primitive_list=primitive_list,
-                dfa_json_file="red_and_blue_boxes_stacking.json"))
+                dfa_json_file="specifications/red_and_blue_boxes_stacking.json"))
 
         builder.Connect(
             station.GetOutputPort("plant_continuous_state"),
